@@ -1,31 +1,36 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-
+const fs = require('fs');
+const path = require('path');
 const app = express();
 const port = process.env.PORT || 4000;
-
-// Configurações do Multer para arquivos em memória (limitando para segurança)
-const upload = multer({
-    limits: { fileSize: 2 * 1024 * 1024 } // Limite: 2MB
-});
-
 app.use(cors());
 app.use(express.json());
-
-// Simulação de banco de dados em memória
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 const usuarios = [];
 
-// Verificação inicial
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname);
+        const nomeUnico = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+        cb(null, nomeUnico);
+    }
+});
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB
+});
+
 app.get('/users', (req, res) => {
     res.send('Servidor funcionando!');
 });
 
-// Registro de novo usuário
 app.post('/users/register', (req, res) => {
     const { id, nome, email, senha, telefone, plano } = req.body;
-
-    console.log('JSON recebido:', req.body);
 
     if (!id || !nome || !email || !senha || !telefone || !plano) {
         return res.status(400).json({ erro: 'Todos os dados são obrigatórios' });
@@ -39,43 +44,38 @@ app.post('/users/register', (req, res) => {
     usuarios.push({ id, nome, email, senha, telefone, plano });
 
     console.log(`Novo usuário cadastrado: ${nome} - ${email}`);
-
     res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
 
-// Retorna todos os usuários
 app.get('/users/all', (req, res) => {
     res.json(usuarios);
 });
 
-// Atualização de imagem (perfil ou fundo)
-app.post('/users/update/:id', upload.any(), (req, res) => {
+app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
     const userId = req.params.id;
-    const usuarioIndex = usuarios.findIndex(u => u.id === userId);
+    const usuario = usuarios.find(u => u.id === userId);
 
-    if (usuarioIndex === -1) {
+    if (!usuario) {
+        if (req.file) fs.unlinkSync(req.file.path);
         return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
 
-    const usuario = usuarios[usuarioIndex];
-    const file = req.files?.[0];
-
-    if (!file) {
-        return res.status(400).json({ erro: 'Nenhum arquivo enviado' });
+    const tipo = req.body.tipo;
+    if (!req.file || (tipo !== 'fotoPerfil' && tipo !== 'fotoFundo')) {
+        return res.status(400).json({ erro: 'Dados inválidos' });
     }
 
-    const field = file.fieldname; // Deve ser 'fotoPerfil' ou 'fotoFundo'
-    const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
-
-    if (field === 'fotoPerfil' || field === 'fotoFundo') {
-        usuario[field] = base64;
-        console.log(`Imagem atualizada: ${field} para usuário ${usuario.nome}`);
-        return res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
-    } else {
-        return res.status(400).json({ erro: 'Campo inválido para imagem' });
+    if (usuario[tipo] && fs.existsSync(usuario[tipo].replace('http://localhost:4000/', ''))) {
+        fs.unlinkSync(usuario[tipo].replace('http://localhost:4000/', ''));
     }
+
+    usuario[tipo] = `http://localhost:${port}/uploads/${req.file.filename}`;
+
+    console.log(`${tipo} atualizado para ${usuario.nome}`);
+
+    res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
 });
 
 app.listen(port, () => {
-    console.log(`✅ Servidor rodando em http://localhost:${port}`);
+    console.log(`Servidor rodando em http://localhost:${port}`);
 });
