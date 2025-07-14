@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 4000 
 
 app.use(cors());
 app.use(express.json());
@@ -41,6 +41,6 @@ app.get('/users/all', (req, res) => {
 });
 
 // abrindo o bd
-app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`);
+app.listen(port, () => {
+    console.log(`Servidor rodando em http://localhost:${port}`);
 });
