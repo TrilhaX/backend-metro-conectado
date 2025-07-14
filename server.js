@@ -7,13 +7,12 @@ const app = express();
 const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-const usuarios = [];
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
-
+app.use('/uploads', express.static(uploadDir));
+const usuarios = [];
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -26,7 +25,7 @@ const storage = multer.diskStorage({
     }
 });
 const upload = multer({
-    storage: storage,
+    storage,
     limits: { fileSize: 2 * 1024 * 1024 }
 });
 
@@ -36,16 +35,13 @@ app.get('/users', (req, res) => {
 
 app.post('/users/register', (req, res) => {
     const { id, nome, email, senha, telefone, plano } = req.body;
-
     if (!id || !nome || !email || !senha || !telefone || !plano) {
         return res.status(400).json({ erro: 'Todos os dados são obrigatórios' });
     }
-
     const usuarioExistente = usuarios.find(user => user.email === email);
     if (usuarioExistente) {
         return res.status(400).json({ erro: 'Email já cadastrado' });
     }
-
     usuarios.push({ id, nome, email, senha, telefone, plano });
     res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
@@ -63,14 +59,20 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
         return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
 
-    const tipo = req.body.tipo;
+    const tipo = req.body.tipo; // 'fotoPerfil' ou 'fotoFundo'
     if (!req.file || (tipo !== 'fotoPerfil' && tipo !== 'fotoFundo')) {
+        if (req.file) fs.unlinkSync(req.file.path);
         return res.status(400).json({ erro: 'Dados inválidos' });
     }
-    if (usuario[tipo] && fs.existsSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''))) {
-        fs.unlinkSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''));
+
+    if (usuario[tipo]) {
+        const caminhoAntigo = path.join(__dirname, usuario[tipo]);
+        if (fs.existsSync(caminhoAntigo)) {
+            fs.unlinkSync(caminhoAntigo);
+        }
     }
-    usuario[tipo] = `https://backend-metro-conectado.onrender.com/uploads/${req.file.filename}`;
+
+    usuario[tipo] = `/uploads/${req.file.filename}`;
     res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
 });
 
