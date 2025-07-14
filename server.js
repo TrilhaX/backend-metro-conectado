@@ -1,33 +1,46 @@
 const express = require('express');
+const cors = require('cors');
 const app = express();
 const PORT = 3000;
 
-// Middleware para entender JSON
+app.use(cors());
 app.use(express.json());
+const usuarios = [];
 
 app.get('/users', (req, res) => {
     res.send('Servidor funcionando!');
 });
 
 app.post('/users/register', (req, res) => {
-    const { nome, email, senha, telefone } = req.body;
+    const { id, nome, email, senha, telefone, plano } = req.body;
 
-    // Mostrar o JSON recebido no console
     console.log('JSON recebido:', req.body);
 
-    if (!nome || !email || !senha || !telefone) {
+    // Verificação básica se nao tem nada faltando
+    if (!id || !nome || !email || !senha || !telefone || !plano) {
         return res.status(400).json({ erro: 'Todos os dados são obrigatórios' });
     }
 
-    console.log(`Novo usuário: ${nome} - ${email}, ${telefone}, ${senha}`);
+    // Verifica se o email já foi cadastrado no bd
+    const usuarioExistente = usuarios.find(user => user.email === email);
+    if (usuarioExistente) {
+        return res.status(400).json({ erro: 'Email já cadastrado' });
+    }
 
-    
-    res.status(201).json({
-        mensagem: 'Usuário criado com sucesso',
-        usuario: { nome, email }
-    });
+    // Armazena o usuário completo, com ID e plano
+    usuarios.push({ id, nome, email, senha, telefone, plano });
+
+    console.log(`Novo usuário cadastrado: ${nome} - ${email}`);
+
+    res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
 
+// chamada de todos os usuarios com info completa
+app.get('/users/all', (req, res) => {
+    res.json(usuarios);
+});
+
+// abrindo o bd
 app.listen(PORT, () => {
     console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
