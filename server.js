@@ -1,10 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const app = express();
-const port = process.env.PORT || 4000 
+const port = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+// Simulação de banco de dados em memória
 const usuarios = [];
 
 app.get('/users', (req, res) => {
@@ -16,18 +18,15 @@ app.post('/users/register', (req, res) => {
 
     console.log('JSON recebido:', req.body);
 
-    // Verificação básica se nao tem nada faltando
     if (!id || !nome || !email || !senha || !telefone || !plano) {
         return res.status(400).json({ erro: 'Todos os dados são obrigatórios' });
     }
 
-    // Verifica se o email já foi cadastrado no bd
     const usuarioExistente = usuarios.find(user => user.email === email);
     if (usuarioExistente) {
         return res.status(400).json({ erro: 'Email já cadastrado' });
     }
 
-    // Armazena o usuário completo, com ID e plano
     usuarios.push({ id, nome, email, senha, telefone, plano });
 
     console.log(`Novo usuário cadastrado: ${nome} - ${email}`);
@@ -35,12 +34,31 @@ app.post('/users/register', (req, res) => {
     res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
 
-// chamada de todos os usuarios com info completa
 app.get('/users/all', (req, res) => {
     res.json(usuarios);
 });
 
-// abrindo o bd
+// Endpoint para atualizar dados de usuário pelo id
+app.post('/users/update/:id', (req, res) => {
+    const userId = req.params.id;
+    const { nome, email, telefone, plano, fotoPerfil, fotoFundo } = req.body;
+
+    const usuarioIndex = usuarios.findIndex(u => u.id === userId);
+    if (usuarioIndex === -1) {
+        return res.status(404).json({ erro: 'Usuário não encontrado' });
+    }
+
+    // Atualiza somente os campos que vieram na requisição
+    if (nome) usuarios[usuarioIndex].nome = nome;
+    if (email) usuarios[usuarioIndex].email = email;
+    if (telefone) usuarios[usuarioIndex].telefone = telefone;
+    if (plano) usuarios[usuarioIndex].plano = plano;
+    if (fotoPerfil) usuarios[usuarioIndex].fotoPerfil = fotoPerfil;
+    if (fotoFundo) usuarios[usuarioIndex].fotoFundo = fotoFundo;
+
+    res.json({ mensagem: 'Usuário atualizado com sucesso', usuario: usuarios[usuarioIndex] });
+});
+
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
