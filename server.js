@@ -1,7 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+
 const app = express();
 const port = process.env.PORT || 4000;
+
+// Configurações do Multer para arquivos em memória (limitando para segurança)
+const upload = multer({
+    limits: { fileSize: 2 * 1024 * 1024 } // Limite: 2MB
+});
 
 app.use(cors());
 app.use(express.json());
@@ -9,10 +16,12 @@ app.use(express.json());
 // Simulação de banco de dados em memória
 const usuarios = [];
 
+// Verificação inicial
 app.get('/users', (req, res) => {
     res.send('Servidor funcionando!');
 });
 
+// Registro de novo usuário
 app.post('/users/register', (req, res) => {
     const { id, nome, email, senha, telefone, plano } = req.body;
 
@@ -34,31 +43,39 @@ app.post('/users/register', (req, res) => {
     res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
 
+// Retorna todos os usuários
 app.get('/users/all', (req, res) => {
     res.json(usuarios);
 });
 
-// Endpoint para atualizar dados de usuário pelo id
-app.post('/users/update/:id', (req, res) => {
+// Atualização de imagem (perfil ou fundo)
+app.post('/users/update/:id', upload.any(), (req, res) => {
     const userId = req.params.id;
-    const { nome, email, telefone, plano, fotoPerfil, fotoFundo } = req.body;
-
     const usuarioIndex = usuarios.findIndex(u => u.id === userId);
+
     if (usuarioIndex === -1) {
         return res.status(404).json({ erro: 'Usuário não encontrado' });
     }
 
-    // Atualiza somente os campos que vieram na requisição
-    if (nome) usuarios[usuarioIndex].nome = nome;
-    if (email) usuarios[usuarioIndex].email = email;
-    if (telefone) usuarios[usuarioIndex].telefone = telefone;
-    if (plano) usuarios[usuarioIndex].plano = plano;
-    if (fotoPerfil) usuarios[usuarioIndex].fotoPerfil = fotoPerfil;
-    if (fotoFundo) usuarios[usuarioIndex].fotoFundo = fotoFundo;
+    const usuario = usuarios[usuarioIndex];
+    const file = req.files?.[0];
 
-    res.json({ mensagem: 'Usuário atualizado com sucesso', usuario: usuarios[usuarioIndex] });
+    if (!file) {
+        return res.status(400).json({ erro: 'Nenhum arquivo enviado' });
+    }
+
+    const field = file.fieldname; // Deve ser 'fotoPerfil' ou 'fotoFundo'
+    const base64 = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+
+    if (field === 'fotoPerfil' || field === 'fotoFundo') {
+        usuario[field] = base64;
+        console.log(`Imagem atualizada: ${field} para usuário ${usuario.nome}`);
+        return res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
+    } else {
+        return res.status(400).json({ erro: 'Campo inválido para imagem' });
+    }
 });
 
 app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`✅ Servidor rodando em http://localhost:${port}`);
 });
