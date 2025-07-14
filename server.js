@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 2 * 1024 * 1024 } // 2MB
+    limits: { fileSize: 2 * 1024 * 1024 }
 });
 
 app.get('/users', (req, res) => {
@@ -47,8 +47,6 @@ app.post('/users/register', (req, res) => {
     }
 
     usuarios.push({ id, nome, email, senha, telefone, plano });
-
-    console.log(`Novo usuário cadastrado: ${nome} - ${email}`);
     res.status(201).json({ mensagem: 'Usuário registrado com sucesso' });
 });
 
@@ -69,18 +67,13 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
     if (!req.file || (tipo !== 'fotoPerfil' && tipo !== 'fotoFundo')) {
         return res.status(400).json({ erro: 'Dados inválidos' });
     }
-
     if (usuario[tipo] && fs.existsSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''))) {
         fs.unlinkSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''));
     }
-
     usuario[tipo] = `https://backend-metro-conectado.onrender.com/uploads/${req.file.filename}`;
-
-    console.log(`${tipo} atualizado para ${usuario.nome}`);
-
     res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
 });
 
 app.listen(port, () => {
-    console.log(`Servidor rodando em https://backend-metro-conectado.onrender.com`);
+    res.status(200)
 });
