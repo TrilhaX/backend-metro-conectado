@@ -70,11 +70,11 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
         return res.status(400).json({ erro: 'Dados inválidos' });
     }
 
-    if (usuario[tipo] && fs.existsSync(usuario[tipo].replace('http://localhost:4000/', ''))) {
-        fs.unlinkSync(usuario[tipo].replace('http://localhost:4000/', ''));
+    if (usuario[tipo] && fs.existsSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''))) {
+        fs.unlinkSync(usuario[tipo].replace('http://https://backend-metro-conectado.onrender.com/', ''));
     }
 
-    usuario[tipo] = `http://localhost:${port}/uploads/${req.file.filename}`;
+    usuario[tipo] = `https://backend-metro-conectado.onrender.com/uploads/${req.file.filename}`;
 
     console.log(`${tipo} atualizado para ${usuario.nome}`);
 
@@ -82,5 +82,5 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}`);
+    console.log(`Servidor rodando em https://backend-metro-conectado.onrender.com`);
 });
