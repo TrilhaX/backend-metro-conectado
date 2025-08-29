@@ -74,7 +74,6 @@ export const updatePerfilUser = async (req, res) => {
 };
 
 // Registrar novo usuário
-// Registrar novo usuário
 export const register = async (req, res) => {
     const { nome, email, senha, telefone } = req.body;
     const plano_id = '11111111-1111-1111-1111-111111111111';
