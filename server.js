@@ -134,7 +134,7 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
   return res.json({ message: 'Imagem atualizada com sucesso', usuario: usuarioRetorno });
 });
 
-app.put('/users/update/:id', async (req, res) => {
+app.put('/users/update-data/:id', async (req, res) => {
     const userId = req.params.id;
     const { nome, telefone, email } = req.body;
     
