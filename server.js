@@ -134,6 +134,36 @@ app.post('/users/update/:id', upload.single('imagem'), (req, res) => {
   return res.json({ message: 'Imagem atualizada com sucesso', usuario: usuarioRetorno });
 });
 
+app.put('/users/update/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { nome, telefone, email } = req.body;
+    
+    const usuario = usuarios.find(u => u.id === userId);
+    if (!usuario) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+  
+    if (nome) {
+        usuario.nome = nome;
+    }
+    if (telefone) {
+        usuario.telefone = telefone;
+    }
+    if (email) {
+        usuario.email = email;
+    }
+
+    console.log(`Usuário ${userId} atualizado. Novos dados:`, { nome: usuario.nome, telefone: usuario.telefone, email: usuario.email });
+
+    const usuarioRetorno = { ...usuario };
+    delete usuarioRetorno.senha;
+    
+    return res.status(200).json({
+        message: 'Informação atualizada com sucesso',
+        usuario: usuarioRetorno
+    });
+});
+
 app.listen(port, () => {
   console.log(`Servidor rodando na porta ${port}`);
 });
