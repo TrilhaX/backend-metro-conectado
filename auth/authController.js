@@ -79,6 +79,7 @@ export const register = async (req, res) => {
     const plano_id = '11111111-1111-1111-1111-111111111111';
 
     try {
+        // 1. Validações
         if (!nome || !email || !senha || !telefone) {
             return res.status(400).json({ erro: 'Todos os campos são obrigatórios' });
         }
@@ -89,21 +90,36 @@ export const register = async (req, res) => {
             return res.status(400).json({ erro: 'Telefone inválido' });
         }
 
-        const { rows } = await pool.query('SELECT email FROM usuarios WHERE email = $1', [email]);
-        if (rows.length > 0) {
+        const { rows: users } = await pool.query(
+            'SELECT email FROM usuarios WHERE email = $1',
+            [email]
+        );
+        if (users.length > 0) {
             return res.status(400).json({ erro: 'Email já cadastrado' });
         }
 
         const id = uuidv4();
         const hashedPassword = await bcrypt.hash(senha, saltRounds);
+
         await pool.query(
             'INSERT INTO usuarios (id, nome, email, senha, telefone, plano_id) VALUES ($1, $2, $3, $4, $5, $6)',
             [id, nome, email, hashedPassword, telefone, plano_id]
         );
+        
+        return res.status(201).json({
+            mensagem: 'Usuário registrado com sucesso',
+            id
+        });
 
-        return res.status(201).json({ mensagem: 'Usuário registrado com sucesso', id });
     } catch (err) {
-        return res.status(500).json({ mensagem: 'Erro no servidor' });
+        console.error("Erro ao registrar usuário:", err);
+        console.error("Stack trace:", err.stack);
+
+        return res.status(500).json({
+            mensagem: 'Erro no servidor',
+            detalhe: err.message || 'Sem mensagem',
+            causas: err.errors || []
+        });
     }
 };
 
