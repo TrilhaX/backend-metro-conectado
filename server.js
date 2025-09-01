@@ -16,7 +16,7 @@ app.use(cors({
 app.use(express.json());
 
 // Rotas
-app.use('/auth', authRoutes);
+app.use('/users', authRoutes);
 
 app.get('/', (req, res) => {
   res.send('API rodando!');
