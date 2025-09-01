@@ -16,7 +16,7 @@ export const getAllUsers = async (req, res) => {
         const { rows } = await pool.query('SELECT id, nome, email, telefone, plano_id FROM usuarios');
         return res.status(200).json(rows);
     } catch (err) {
-        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err.message || err}` });
     }
 };
 
@@ -33,7 +33,7 @@ export const getUserById = async (req, res) => {
         });
         return res.json(usuario);
     } catch (err) {
-        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err.message || err}` });
     }
 };
 
@@ -69,7 +69,7 @@ export const updatePerfilUser = async (req, res) => {
 
         return res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
     } catch (err) {
-        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err.message || err}` });
     }
 };
 
@@ -103,7 +103,7 @@ export const register = async (req, res) => {
 
         return res.status(201).json({ mensagem: 'Usuário registrado com sucesso', id });
     } catch (err) {
-        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err.message || err}` });
     }
 };
 
@@ -135,6 +135,6 @@ export const login = async (req, res) => {
 
         return res.json({ mensagem: 'Login bem-sucedido', token });
     } catch (err) {
-        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err.message || err}` });
     }
 };
