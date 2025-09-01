@@ -33,7 +33,7 @@ export const getUserById = async (req, res) => {
         });
         return res.json(usuario);
     } catch (err) {
-        return res.status(500).json({ mensagem: 'Erro no servidor, ${err}' });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
     }
 };
 
@@ -69,7 +69,7 @@ export const updatePerfilUser = async (req, res) => {
 
         return res.json({ mensagem: 'Imagem atualizada com sucesso', usuario });
     } catch (err) {
-        return res.status(500).json({ mensagem: 'Erro no servidor, ${err}' });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
     }
 };
 
@@ -135,6 +135,6 @@ export const login = async (req, res) => {
 
         return res.json({ mensagem: 'Login bem-sucedido', token });
     } catch (err) {
-        return res.status(500).json({ mensagem: 'Erro no servidor, ${err}' });
+        return res.status(500).json({ mensagem: `Erro no servidor, ${err}` });
     }
 };
